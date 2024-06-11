@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  refreshTokens RefreshToken?
+  projects  Project[]   @relation("UserProjects")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     Int      @unique
+  expiryDate DateTime
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  userId      Int
+  user        User      @relation("UserProjects", fields: [userId], references: [id])
+  columns     Column[]  @relation("ProjectColumns")
+
+  @@index([userId])
+}
+
+model Column {
+  id          Int       @id @default(autoincrement())
+  name        String
+  position    Int
+  projectId   Int
+  project     Project   @relation("ProjectColumns", fields: [projectId], references: [id])
+  tasks       Task[]    @relation("ColumnTasks")
+
+  @@unique([projectId, position])
+  @@index([projectId])
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  columnId    Int
+  column      Column    @relation("ColumnTasks", fields: [columnId], references: [id])
+  position    Int
+
+  @@unique([columnId, position])
+  @@index([columnId])
+}
