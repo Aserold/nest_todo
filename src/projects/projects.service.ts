@@ -18,12 +18,14 @@ export class ProjectsService {
   async findAll(userId: number) {
     return await this.prisma.project.findMany({
       where: { userId },
+      include: { columns: { include: { tasks: true } } },
     });
   }
 
   async findOne(id: number, userId: number) {
     const project = await this.prisma.project.findUnique({
       where: { id, userId },
+      include: { columns: { include: { tasks: true } } },
     });
 
     if (!project) {
@@ -38,6 +40,7 @@ export class ProjectsService {
     return this.prisma.project.update({
       where: { id: project.id, userId: project.userId },
       data: { ...updateProjectDto },
+      include: { columns: { include: { tasks: true } } },
     });
   }
 
@@ -45,6 +48,7 @@ export class ProjectsService {
     await this.findOne(id, userId);
     await this.prisma.project.delete({
       where: { id, userId },
+      include: { columns: { include: { tasks: true } } },
     });
   }
 }

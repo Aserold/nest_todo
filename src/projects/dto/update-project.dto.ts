@@ -1,4 +1,16 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateProjectDto } from './create-project.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, Length } from 'class-validator';
 
-export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
+export class UpdateProjectDto {
+  @ApiPropertyOptional({ default: 'My Project' })
+  @IsOptional()
+  @IsString()
+  @Length(3, 64)
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(3, 255)
+  description?: string;
+}

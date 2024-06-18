@@ -38,19 +38,19 @@ CREATE INDEX "Project_userId_idx" ON "Project"("userId");
 CREATE INDEX "Column_projectId_idx" ON "Column"("projectId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Column_projectId_position_key" ON "Column"("projectId", "position");
+CREATE UNIQUE INDEX "Column_projectId_key" ON "Column"("projectId");
 
 -- CreateIndex
 CREATE INDEX "Task_columnId_idx" ON "Task"("columnId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Task_columnId_position_key" ON "Task"("columnId", "position");
+CREATE UNIQUE INDEX "Task_columnId_key" ON "Task"("columnId");
 
 -- AddForeignKey
-ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Column" ADD CONSTRAINT "Column_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Column" ADD CONSTRAINT "Column_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Task" ADD CONSTRAINT "Task_columnId_fkey" FOREIGN KEY ("columnId") REFERENCES "Column"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Task" ADD CONSTRAINT "Task_columnId_fkey" FOREIGN KEY ("columnId") REFERENCES "Column"("id") ON DELETE CASCADE ON UPDATE CASCADE;
