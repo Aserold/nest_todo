@@ -16,7 +16,7 @@ export class TasksService {
 
     const column = await this.prisma.column.findUnique({
       where: { id: columnId },
-      include: { project: true },
+      select: { project: { select: { userId: true } } },
     });
 
     if (column.project.userId !== userId) {
@@ -40,7 +40,7 @@ export class TasksService {
   async findAll(columnId: number, userId: number) {
     const column = await this.prisma.column.findUnique({
       where: { id: columnId },
-      include: { project: true },
+      select: { project: { select: { userId: true } } },
     });
 
     if (column.project.userId !== userId) {
@@ -56,7 +56,9 @@ export class TasksService {
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: { column: { include: { project: true } } },
+      include: {
+        column: { select: { project: { select: { userId: true } } } },
+      },
     });
 
     if (!task) {
@@ -78,7 +80,9 @@ export class TasksService {
   async remove(id: number, userId: number) {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: { column: { include: { project: true } } },
+      include: {
+        column: { select: { project: { select: { userId: true } } } },
+      },
     });
 
     if (!task) {
@@ -112,7 +116,9 @@ export class TasksService {
   ) {
     const task = await this.prisma.task.findUnique({
       where: { id },
-      include: { column: { include: { project: true } } },
+      include: {
+        column: { select: { project: { select: { userId: true } } } },
+      },
     });
 
     if (!task) {
