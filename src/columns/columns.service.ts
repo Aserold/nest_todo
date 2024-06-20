@@ -1,4 +1,3 @@
--- Active: 1717675172500@@127.0.0.1@5432@todo
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateColumnDto } from './dto/create-column.dto';
 import { UpdateColumnDto } from './dto/update-column.dto';
