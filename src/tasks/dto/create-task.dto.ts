@@ -1,5 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+
+export class FieldValueDto {
+  @ApiProperty({ default: 1 })
+  @IsInt()
+  fieldId: number;
+
+  @ApiPropertyOptional({})
+  @IsOptional()
+  @IsString()
+  stringValue?: string;
+
+  @ApiPropertyOptional({})
+  @IsOptional()
+  @IsInt()
+  numberValue?: number;
+}
 
 export class CreateTaskDto {
   @ApiProperty({ default: 1 })
@@ -16,4 +39,10 @@ export class CreateTaskDto {
   @IsString()
   @MaxLength(2048)
   description?: string;
+
+  @ApiPropertyOptional({ type: [FieldValueDto] })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => FieldValueDto)
+  fieldValues: FieldValueDto[];
 }

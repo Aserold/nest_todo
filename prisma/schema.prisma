@@ -34,13 +34,14 @@ model RefreshToken {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
   description String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
   userId      Int
-  user        User     @relation("UserProjects", fields: [userId], references: [id], onDelete: Cascade)
-  columns     Column[] @relation("ProjectColumns")
+  user        User        @relation("UserProjects", fields: [userId], references: [id], onDelete: Cascade)
+  columns     Column[]    @relation("ProjectColumns")
+  taskFields  TaskField[] @relation("ProjectTaskFields")
 
   @@index([userId])
 }
@@ -57,13 +58,43 @@ model Column {
 }
 
 model Task {
-  id          Int      @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   name        String
   description String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime         @default(now())
   columnId    Int
-  column      Column   @relation("ColumnTasks", fields: [columnId], references: [id], onDelete: Cascade)
+  column      Column           @relation("ColumnTasks", fields: [columnId], references: [id], onDelete: Cascade)
   position    Int
+  fieldValues TaskFieldValue[]
 
   @@index([columnId])
+}
+
+model TaskField {
+  id          Int              @id @default(autoincrement())
+  projectId   Int
+  project     Project          @relation("ProjectTaskFields", fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  fieldType   FieldType
+  fieldValues TaskFieldValue[]
+
+  @@index([projectId])
+}
+
+model TaskFieldValue {
+  taskId      Int
+  fieldId     Int
+  stringValue String?
+  numberValue Float?
+
+  task  Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  field TaskField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, fieldId])
+}
+
+enum FieldType {
+  STRING
+  NUMBER
+  OPTION
 }

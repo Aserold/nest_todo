@@ -7,6 +7,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ProjectsModule } from './projects/projects.module';
 import { ColumnsModule } from './columns/columns.module';
 import { TasksModule } from './tasks/tasks.module';
+import { FieldsService } from './fields/fields.service';
+import { FieldsModule } from './fields/fields.module';
 
 @Module({
   imports: [
@@ -24,8 +26,9 @@ import { TasksModule } from './tasks/tasks.module';
     ProjectsModule,
     ColumnsModule,
     TasksModule,
+    FieldsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [FieldsService],
 })
 export class AppModule {}
