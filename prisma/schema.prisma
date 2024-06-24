@@ -96,5 +96,4 @@ model TaskFieldValue {
 enum FieldType {
   STRING
   NUMBER
-  OPTION
 }
