@@ -4,11 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SignupDto } from './dto/register.dto';
-import { DatabaseService } from 'src/database/database.service';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from 'src/database/database.service';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -20,11 +21,11 @@ export class AuthService {
   async login(loginData: LoginDto) {
     const { email, password } = loginData;
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new UnauthorizedException('Неверные логин или пароль');
+    if (!user) throw new RpcException('Invalid login or password');
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      throw new UnauthorizedException('Неверные логин или пароль');
+      throw new RpcException('Invalid login or password');
     }
 
     const tokens = await this.generateUserToken(user.id);
@@ -42,7 +43,7 @@ export class AuthService {
       where: { email },
     });
     if (emailInUse) {
-      throw new BadRequestException('Email уже существует');
+      throw new RpcException('Email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 5);
@@ -50,6 +51,7 @@ export class AuthService {
     await this.prisma.user.create({
       data: { ...signupData, password: hashedPassword },
     });
+    return { message: 'Registration successful' };
   }
 
   async refreshTokens(refreshToken: string) {
@@ -61,7 +63,7 @@ export class AuthService {
     });
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new RpcException('Invalid token');
     }
 
     return this.generateUserToken(token.userId);

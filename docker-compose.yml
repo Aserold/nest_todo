@@ -1,0 +1,35 @@
+version: '2.9'
+
+services:
+  postgres_db:
+    image: postgres
+    ports:
+      - ${DB_PORT}:5432
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+  todo:
+    build: ./todo
+    depends_on:
+      - postgres_db
+    ports:
+      - ${TODO_PORT}:${TODO_PORT}
+    environment:
+      - PORT=${TODO_PORT}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+  auth:
+    build: ./auth
+    depends_on:
+      - postgres_db
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+  rabbit:
+    image: rabbitmq:3.13.4-management
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672

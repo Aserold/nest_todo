@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
-import { RmqClientModule } from 'src/rmq-client/rmq-client.module';
+import { AuthService } from './auth.service';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-  providers: [],
+  imports: [DatabaseModule],
   controllers: [AuthController],
-  imports: [RmqClientModule],
+  providers: [AuthService],
 })
 export class AuthModule {}
