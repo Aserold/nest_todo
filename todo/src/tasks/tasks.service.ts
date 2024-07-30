@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,10 +10,15 @@ import { CreateTaskDto, FieldValueDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { FieldType } from '@prisma/client';
+import { ClientProxy, RmqRecordBuilder } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: DatabaseService) {}
+  constructor(
+    private prisma: DatabaseService,
+    @Inject('FIELD_SERVICE') private client: ClientProxy,
+  ) {}
 
   async validateFieldValues(
     fieldValues: FieldValueDto[],
@@ -69,6 +76,10 @@ export class TasksService {
       throw new UnauthorizedException('The column does not belong to the user');
     }
 
+    if (!column) {
+      throw new BadRequestException('Column not found');
+    }
+
     const position = await this.prisma.task.count({
       where: { columnId },
     });
@@ -92,28 +103,39 @@ export class TasksService {
     });
 
     if (fieldValues) {
+      const valuesData = {
+        fieldValues: [],
+      };
+
       for (const fieldValue of fieldValues) {
-        const { fieldId, stringValue, numberValue } = fieldValue;
-        await this.prisma.taskFieldValue.create({
-          data: {
+        const payload = {
+          fieldValue: {
+            ...fieldValue,
             taskId: task.id,
-            fieldId,
-            stringValue,
-            numberValue,
           },
-        });
+        };
+
+        const record = new RmqRecordBuilder(payload)
+          .setOptions({
+            type: 'create-values',
+            contentType: 'application/json',
+          })
+          .build();
+
+        const rpcResult = await firstValueFrom(
+          this.client.send('create-values', record),
+        );
+        if (rpcResult['error']) {
+          throw new InternalServerErrorException();
+        }
+
+        valuesData.fieldValues.push(rpcResult);
       }
+
+      return { ...task, fieldValues: valuesData.fieldValues };
     }
 
-    return this.prisma.task.findUnique({
-      where: { id: task.id },
-      include: {
-        fieldValues: {
-          select: { fieldId: true, stringValue: true, numberValue: true },
-          orderBy: { fieldId: 'asc' },
-        },
-      },
-    });
+    return task;
   }
 
   async findAll(columnId: number, userId: number) {
@@ -122,20 +144,56 @@ export class TasksService {
       select: { project: { select: { userId: true } } },
     });
 
+    if (!column) {
+      throw new BadRequestException('Column not found');
+    }
+
     if (column.project.userId !== userId) {
       throw new UnauthorizedException('The column does not belong to the user');
     }
 
-    return this.prisma.task.findMany({
+    const tasks = await this.prisma.task.findMany({
       where: { columnId },
-      include: {
-        fieldValues: {
-          select: { fieldId: true, stringValue: true, numberValue: true },
-          orderBy: { fieldId: 'asc' },
-        },
-      },
       orderBy: { position: 'asc' },
     });
+
+    if (!tasks.length) {
+      return tasks.map((task) => ({
+        ...task,
+        fieldValues: [],
+      }));
+    }
+
+    const taskIds = tasks.map((task) => task.id);
+
+    const payload = {
+      taskIds: taskIds,
+    };
+
+    const record = new RmqRecordBuilder(payload)
+      .setOptions({
+        type: 'findall-values',
+        contentType: 'application/json',
+      })
+      .build();
+
+    const fieldValues = await firstValueFrom(
+      this.client.send('findall-values', record),
+    );
+
+    if (fieldValues['error']) {
+      throw new InternalServerErrorException();
+    }
+
+    const tasksWithFieldValues = tasks.map((task) => ({
+      ...task,
+      fieldValues:
+        fieldValues['fieldValues'].filter(
+          (value) => value.taskId === task.id,
+        ) || [],
+    }));
+
+    return tasksWithFieldValues;
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
@@ -174,38 +232,39 @@ export class TasksService {
     });
 
     if (fieldValues) {
+      const valuesData = {
+        fieldValues: [],
+      };
+
       for (const fieldValue of fieldValues) {
-        const { fieldId, stringValue, numberValue } = fieldValue;
-        await this.prisma.taskFieldValue.upsert({
-          where: {
-            taskId_fieldId: {
-              taskId: id,
-              fieldId,
-            },
+        const payload = {
+          fieldValue: {
+            ...fieldValue,
+            taskId: task.id,
           },
-          update: {
-            stringValue,
-            numberValue,
-          },
-          create: {
-            taskId: id,
-            fieldId,
-            stringValue,
-            numberValue,
-          },
-        });
+        };
+
+        const record = new RmqRecordBuilder(payload)
+          .setOptions({
+            type: 'update-values',
+            contentType: 'application/json',
+          })
+          .build();
+
+        const rpcResult = await firstValueFrom(
+          this.client.send('update_values', record),
+        );
+        if (rpcResult['error']) {
+          throw new InternalServerErrorException();
+        }
+
+        valuesData.fieldValues.push(rpcResult);
       }
+
+      return { ...updatedTask, ...valuesData };
     }
 
-    return this.prisma.task.findUnique({
-      where: { id: updatedTask.id },
-      include: {
-        fieldValues: {
-          select: { fieldId: true, stringValue: true, numberValue: true },
-          orderBy: { fieldId: 'asc' },
-        },
-      },
-    });
+    return updatedTask;
   }
 
   async remove(id: number, userId: number) {

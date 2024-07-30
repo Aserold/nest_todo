@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Field } from 'src/fields/swagger_types/field-type';
 
 export class CreateTask {
   @ApiProperty({ default: 1 })
@@ -18,4 +19,7 @@ export class CreateTask {
 
   @ApiProperty({ default: 0 })
   position: number;
+
+  @ApiProperty({ type: [Field] })
+  fieldValues: Field[];
 }

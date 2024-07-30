@@ -13,6 +13,15 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           queueOptions: { durable: false },
         },
       },
+      {
+        name: 'FIELD_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://rabbit:5672'],
+          queue: 'field_queue',
+          queueOptions: { durable: false },
+        },
+      },
     ]),
   ],
   exports: [
@@ -24,6 +33,23 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           urls: ['amqp://rabbit:5672'],
           queue: 'auth_queue',
           queueOptions: { durable: false },
+        },
+      },
+      {
+        name: 'FIELD_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://rabbit:5672'],
+          queue: 'field_queue',
+          queueOptions: { durable: false },
+          serializer: {
+            serialize(value: any) {
+              return {
+                contentType: 'application/json',
+                content: Buffer.from(JSON.stringify(value)),
+              };
+            },
+          },
         },
       },
     ]),

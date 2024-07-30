@@ -65,7 +65,6 @@ model Task {
   columnId    Int
   column      Column           @relation("ColumnTasks", fields: [columnId], references: [id], onDelete: Cascade)
   position    Int
-  fieldValues TaskFieldValue[]
 
   @@index([columnId])
 }
@@ -76,21 +75,8 @@ model TaskField {
   project     Project          @relation("ProjectTaskFields", fields: [projectId], references: [id], onDelete: Cascade)
   name        String
   fieldType   FieldType
-  fieldValues TaskFieldValue[]
 
   @@index([projectId])
-}
-
-model TaskFieldValue {
-  taskId      Int
-  fieldId     Int
-  stringValue String?
-  numberValue Float?
-
-  task  Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  field TaskField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-
-  @@id([taskId, fieldId])
 }
 
 enum FieldType {
