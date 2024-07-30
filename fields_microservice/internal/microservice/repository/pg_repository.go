@@ -16,7 +16,6 @@ type fieldsRepo struct {
 // Create implements microservice.Repository.
 func (r *fieldsRepo) Create(fieldValue *models.TaskFieldValue) (*models.TaskFieldValue, error) {
 	f := &models.TaskFieldValue{}
-	log.Print(fieldValue)
 
 	if err := r.db.QueryRowx(createQuery, &fieldValue.TaskId, &fieldValue.FieldId,
 		&fieldValue.StringValue, &fieldValue.NumberValue).StructScan(f); err != nil {

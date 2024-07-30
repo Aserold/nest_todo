@@ -31,12 +31,7 @@ func (h *fieldsHandlers) Create() func(amqp.Delivery) {
 			return
 		}
 
-		log.Printf("Unmarshaled message: %+v", message)
-
-		fieldValue := message.Data.FieldValue
-		log.Printf("Processing fieldValue: %+v", fieldValue)
-
-		result, err := h.fieldsUC.CreateTaskFieldValue(&fieldValue)
+		result, err := h.fieldsUC.CreateTaskFieldValue(&message.Data.FieldValue)
 		if err != nil {
 			log.Printf("Failed to create task field value: %s", errors.Wrap(err, "fieldsHandlers.Create"))
 			h.publishResponse(msg.ReplyTo, msg.CorrelationId, nil, err)
@@ -68,8 +63,6 @@ func (h *fieldsHandlers) FindAll() func(amqp.Delivery) {
 			return
 		}
 
-		log.Printf("Unmarshaled message: %+v", message)
-
 		result, err := h.fieldsUC.FindAllTaskFieldValues(&message.Data)
 		if err != nil {
 			log.Printf("Failed to find task field values: %s", errors.Wrap(err, "fieldsHandlers.FindAll"))
@@ -95,8 +88,6 @@ func (h *fieldsHandlers) Update() func(amqp.Delivery) {
 			h.publishResponse(msg.ReplyTo, msg.CorrelationId, nil, err)
 			return
 		}
-
-		log.Printf("Unmarshaled message: %+v", message)
 
 		result, err := h.fieldsUC.UpdateTaskFieldValue(&message.Data.FieldValue)
 		if err != nil {

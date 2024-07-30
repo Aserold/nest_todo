@@ -29,7 +29,6 @@ export class AuthController {
   login(@Body() userDto: LoginDto): Observable<LoginResponse> {
     return this.client.send('login', userDto).pipe(
       catchError((err) => {
-        console.log(err);
         throw new BadRequestException(err.message);
       }),
     );
@@ -41,7 +40,6 @@ export class AuthController {
   register(@Body() userDto: SignupDto) {
     return this.client.send('register_user', userDto).pipe(
       catchError((err) => {
-        console.log(err);
         throw new BadRequestException(err.message);
       }),
     );
@@ -55,7 +53,6 @@ export class AuthController {
   ): Observable<RefreshResponse> {
     return this.client.send('refresh_token', refreshTokenDto).pipe(
       catchError((err) => {
-        console.log(err);
         throw new BadRequestException(err.message);
       }),
     );
